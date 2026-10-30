@@ -16,6 +16,12 @@
   f.allowFullscreen = true;
   f.referrerPolicy = 'strict-origin-when-cross-origin';
   f.src = 'https://www.youtube.com/embed/' + id + '?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&origin=' + encodeURIComponent(location.origin) + (extra ? '&' + extra.replace(/[^\w=&.-]/g, '') : '');
+  // quando o player do YouTube (dentro desta página) terminar de carregar, pede para ele avisar o app dos eventos
+  f.onload = function () {
+    var w = f.contentWindow;
+    w.postMessage(JSON.stringify({ event: 'listening', id: 1 }), '*');
+    ['onStateChange', 'onError', 'onReady'].forEach(function (ev) { w.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: [ev] }), '*'); });
+  };
   document.body.appendChild(f);
   window.addEventListener('message', function (e) {
     if (e.source === f.contentWindow) { parent.postMessage(e.data, '*'); }
